@@ -1,0 +1,13 @@
+package com.example.mewstore;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class MewStoreApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
