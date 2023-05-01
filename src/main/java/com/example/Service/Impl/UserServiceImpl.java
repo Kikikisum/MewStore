@@ -10,7 +10,9 @@ import com.example.Mapper.UserMapper;
 import com.example.Service.ReportService;
 import com.example.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Autowired
@@ -19,7 +21,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User getUserById(Long id) {
-        LambdaQueryWrapper<com.example.Entity.User> lqw1=new LambdaQueryWrapper<User>();
+        LambdaQueryWrapper<User> lqw1=new LambdaQueryWrapper<User>();
         lqw1.eq(User::getId,id);
         User user=userMapper.selectOne(lqw1);
         return user;

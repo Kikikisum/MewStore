@@ -14,7 +14,7 @@ import lombok.ToString;
 public class Report {
     private Long id;
     private Long reported_id;
-    private int report_order;
+    private Long report_order;
     private Long reporter_id;
     private int status;
     private String content;

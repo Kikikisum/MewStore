@@ -1,5 +1,9 @@
 package com.example.Util;
 
+import lombok.Data;
+import org.springframework.stereotype.Component;
+
+@Component
 public class SnowFlakeUtil {
     //机器ID  2进制5位  32位减掉1位 31个
     private long workerId;
@@ -36,7 +40,25 @@ public class SnowFlakeUtil {
         return System.currentTimeMillis();
     }
 
+    public SnowFlakeUtil(long workerId, long datacenterId, long sequence, long twepoch, long workerIdBits, long datacenterIdBits, long sequenceBits, long maxWorkerId, long maxDatacenterId, long workerIdShift, long datacenterIdShift, long timestampLeftShift, long sequenceMask, long lastTimestamp) {
+        this.workerId = workerId;
+        this.datacenterId = datacenterId;
+        this.sequence = sequence;
+        this.twepoch = twepoch;
+        this.workerIdBits = workerIdBits;
+        this.datacenterIdBits = datacenterIdBits;
+        this.sequenceBits = sequenceBits;
+        this.maxWorkerId = maxWorkerId;
+        this.maxDatacenterId = maxDatacenterId;
+        this.workerIdShift = workerIdShift;
+        this.datacenterIdShift = datacenterIdShift;
+        this.timestampLeftShift = timestampLeftShift;
+        this.sequenceMask = sequenceMask;
+        this.lastTimestamp = lastTimestamp;
+    }
 
+    public SnowFlakeUtil() {
+    }
 
     public SnowFlakeUtil(long workerId, long datacenterId, long sequence) {
 

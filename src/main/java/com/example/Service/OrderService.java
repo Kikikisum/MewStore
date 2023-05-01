@@ -1,10 +1,11 @@
 package com.example.Service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.Entity.Order;
 
 import java.util.List;
 
-public interface OrderService {
+public interface OrderService extends IService<Order> {
     //返回所有订单
     public List<Order> getAllOrder();
     //通过id查找订单

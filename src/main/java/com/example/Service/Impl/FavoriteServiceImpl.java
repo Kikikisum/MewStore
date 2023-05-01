@@ -6,7 +6,9 @@ import com.example.Mapper.FavoriteMapper;
 import com.example.Mapper.UserMapper;
 import com.example.Service.FavoriteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements FavoriteService{
     @Autowired
     FavoriteMapper favoriteMapper;
