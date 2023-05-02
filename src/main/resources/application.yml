@@ -34,4 +34,4 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
 server:
-  port: 3036
+  port: 3060
