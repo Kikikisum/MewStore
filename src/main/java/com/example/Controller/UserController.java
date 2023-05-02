@@ -13,10 +13,7 @@ import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -24,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
+@CrossOrigin
 @RestController
 public class UserController {
 
