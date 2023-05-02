@@ -7,26 +7,28 @@ import com.example.Service.FavoriteService;
 import com.example.Service.GoodService;
 import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
-import com.example.Util.SnowFlakeUtil;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
 @Controller
+@RestController
 public class FavoriteController {
 
     Map<String, Object> map=new HashMap<>();
     @Autowired
     private DecodeJwtUtils decodeJwtUtils;
+    @Autowired
     private UserService userService;
+    @Autowired
     private FavoriteService favoriteService;
+    @Autowired
     private GoodService goodService;
 
     @PostMapping("fav/{id}")
