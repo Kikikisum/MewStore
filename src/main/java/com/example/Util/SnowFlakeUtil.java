@@ -1,138 +1,116 @@
 package com.example.Util;
 
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
-@Component
-public class SnowFlakeUtil {
-    //机器ID  2进制5位  32位减掉1位 31个
-    private long workerId;
-    //机房ID 2进制5位  32位减掉1位 31个
-    private long datacenterId;
-    //代表一毫秒内生成的多个id的最新序号  12位 4096 -1 = 4095 个
-    private long sequence;
-    //设置一个时间初始值    2^41 - 1   差不多可以用69年
-    private long twepoch = 1585644268888L;
-    //5位的机器id
-    private long workerIdBits = 5L;
-    //5位的机房id
-    private long datacenterIdBits = 5L;
-    //每毫秒内产生的id数 2 的 12次方
-    private long sequenceBits = 12L;
-    // 这个是二进制运算，就是5 bit最多只能有31个数字，也就是说机器id最多只能是32以内
-    private long maxWorkerId = -1L ^ (-1L << workerIdBits);
-    // 这个是一个意思，就是5 bit最多只能有31个数字，机房id最多只能是32以内
-    private long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
 
-    private long workerIdShift = sequenceBits;
-    private long datacenterIdShift = sequenceBits + workerIdBits;
-    private long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
+public class SnowFlakeUtil {
+    //下面两个每个5位，加起来就是10位的工作机器id
+    private long workerId;    //工作id
+    private long datacenterId;   //数据id
+    //12位的***
+    private long sequence;
+
+    public SnowFlakeUtil(long workerId, long datacenterId, long sequence){
+        // sanity check for workerId
+        if (workerId > maxWorkerId || workerId < 0) {
+            throw new IllegalArgumentException(String.format("worker Id can't be greater than %d or less than 0",maxWorkerId));
+        }
+        if (datacenterId > maxDatacenterId || datacenterId < 0) {
+            throw new IllegalArgumentException(String.format("datacenter Id can't be greater than %d or less than 0",maxDatacenterId));
+        }
+        System.out.printf("worker starting. timestamp left shift %d, datacenter id bits %d, worker id bits %d, sequence bits %d, workerid %d",
+                timestampLeftShift, datacenterIdBits, workerIdBits, sequenceBits, workerId);
+
+        this.workerId = workerId;
+        this.datacenterId = datacenterId;
+        this.sequence = sequence;
+    }
+
+    //初始时间戳
+    private long twepoch = 1645587680;
+
+    //长度为5位
+    private long workerIdBits = 5L;
+    private long datacenterIdBits = 5L;
+    //最大值
+    private long maxWorkerId = -1L ^ (-1L << workerIdBits);
+    private long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
+    //***id长度
+    private long sequenceBits = 12L;
+    //***最大值
     private long sequenceMask = -1L ^ (-1L << sequenceBits);
-    //记录产生时间毫秒数，判断是否是同1毫秒
+
+    //工作id需要左移的位数，12位
+    private long workerIdShift = sequenceBits;
+    //数据id需要左移位数 12+5=17位
+    private long datacenterIdShift = sequenceBits + workerIdBits;
+    //时间戳需要左移位数 12+5+5=22位
+    private long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
+
+    //上次时间戳，初始值为负数
     private long lastTimestamp = -1L;
+
     public long getWorkerId(){
         return workerId;
     }
-    public long getDatacenterId() {
+
+    public long getDatacenterId(){
         return datacenterId;
     }
-    public long getTimestamp() {
+
+    public long getTimestamp(){
         return System.currentTimeMillis();
     }
 
-    public SnowFlakeUtil(long workerId, long datacenterId, long sequence, long twepoch, long workerIdBits, long datacenterIdBits, long sequenceBits, long maxWorkerId, long maxDatacenterId, long workerIdShift, long datacenterIdShift, long timestampLeftShift, long sequenceMask, long lastTimestamp) {
-        this.workerId = workerId;
-        this.datacenterId = datacenterId;
-        this.sequence = sequence;
-        this.twepoch = twepoch;
-        this.workerIdBits = workerIdBits;
-        this.datacenterIdBits = datacenterIdBits;
-        this.sequenceBits = sequenceBits;
-        this.maxWorkerId = maxWorkerId;
-        this.maxDatacenterId = maxDatacenterId;
-        this.workerIdShift = workerIdShift;
-        this.datacenterIdShift = datacenterIdShift;
-        this.timestampLeftShift = timestampLeftShift;
-        this.sequenceMask = sequenceMask;
-        this.lastTimestamp = lastTimestamp;
-    }
-
-    public SnowFlakeUtil() {
-    }
-
-    public SnowFlakeUtil(long workerId, long datacenterId, long sequence) {
-
-        // 检查机房id和机器id是否超过31 不能小于0
-        if (workerId > maxWorkerId || workerId < 0) {
-            throw new IllegalArgumentException(
-                    String.format("worker Id can't be greater than %d or less than 0",maxWorkerId));
-        }
-
-        if (datacenterId > maxDatacenterId || datacenterId < 0) {
-
-            throw new IllegalArgumentException(
-                    String.format("datacenter Id can't be greater than %d or less than 0",maxDatacenterId));
-        }
-        this.workerId = workerId;
-        this.datacenterId = datacenterId;
-        this.sequence = sequence;
-    }
-
-    // 这个是核心方法，通过调用nextId()方法，让当前这台机器上的snowflake算法程序生成一个全局唯一的id
+    //下一个ID生成算法
     public synchronized long nextId() {
-        // 这儿就是获取当前时间戳，单位是毫秒
         long timestamp = timeGen();
-        if (timestamp < lastTimestamp) {
 
-            System.err.printf(
-                    "clock is moving backwards. Rejecting requests until %d.", lastTimestamp);
-            throw new RuntimeException(
-                    String.format("Clock moved backwards. Refusing to generate id for %d milliseconds",
-                            lastTimestamp - timestamp));
+        //获取当前时间戳如果小于上次时间戳，则表示时间戳获取出现异常
+        if (timestamp < lastTimestamp) {
+            System.err.printf("clock is moving backwards.  Rejecting requests until %d.", lastTimestamp);
+            throw new RuntimeException(String.format("Clock moved backwards.  Refusing to generate id for %d milliseconds",
+                    lastTimestamp - timestamp));
         }
 
-        // 下面是说假设在同一个毫秒内，又发送了一个请求生成一个id
-        // 这个时候就得把seqence序号给递增1，最多就是4096
+        //获取当前时间戳如果等于上次时间戳（同一毫秒内），则在***加一；否则***赋值为0，从0开始。
         if (lastTimestamp == timestamp) {
-
-            // 这个意思是说一个毫秒内最多只能有4096个数字，无论你传递多少进来，
-            //这个位运算保证始终就是在4096这个范围内，避免你自己传递个sequence超过了4096这个范围
             sequence = (sequence + 1) & sequenceMask;
-            //当某一毫秒的时间，产生的id数 超过4095，系统会进入等待，直到下一毫秒，系统继续产生ID
             if (sequence == 0) {
                 timestamp = tilNextMillis(lastTimestamp);
             }
-
         } else {
             sequence = 0;
         }
-        // 这儿记录一下最近一次生成id的时间戳，单位是毫秒
+
+        //将上次时间戳值刷新
         lastTimestamp = timestamp;
-        // 这儿就是最核心的二进制位运算操作，生成一个64bit的id
-        // 先将当前时间戳左移，放到41 bit那儿；将机房id左移放到5 bit那儿；将机器id左移放到5 bit那儿；将序号放最后12 bit
-        // 最后拼接起来成一个64 bit的二进制数字，转换成10进制就是个long型
+
+        /**
+         * 返回结果：
+         * (timestamp - twepoch) << timestampLeftShift) 表示将时间戳减去初始时间戳，再左移相应位数
+         * (datacenterId << datacenterIdShift) 表示将数据id左移相应位数
+         * (workerId << workerIdShift) 表示将工作id左移相应位数
+         * | 是按位或运算符，例如：x | y，只有当x，y都为0的时候结果才为0，其它情况结果都为1。
+         * 因为个部分只有相应位上的值有意义，其它位上都是0，所以将各部分的值进行 | 运算就能得到最终拼接好的id
+         */
         return ((timestamp - twepoch) << timestampLeftShift) |
                 (datacenterId << datacenterIdShift) |
-                (workerId << workerIdShift) | sequence;
+                (workerId << workerIdShift) |
+                sequence;
     }
 
-    /**
-     * 当某一毫秒的时间，产生的id数 超过4095，系统会进入等待，直到下一毫秒，系统继续产生ID
-     * @param lastTimestamp
-     * @return
-     */
+    //获取时间戳，并与上次时间戳比较
     private long tilNextMillis(long lastTimestamp) {
-
         long timestamp = timeGen();
-
         while (timestamp <= lastTimestamp) {
             timestamp = timeGen();
         }
         return timestamp;
     }
-    //获取当前时间戳
+
+    //获取系统时间戳
     private long timeGen(){
         return System.currentTimeMillis();
     }
-
 }
