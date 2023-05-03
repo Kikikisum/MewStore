@@ -57,6 +57,10 @@ public class FavoriteController {
                 Good good=goodService.queryById(good_id);
                 if(good!= null)
                 {
+                    int fav=good.getView();
+                    fav++;
+                    good.setView(fav);
+                    goodService.updateById(good);
                     Favorite favorite=new Favorite(uid,good_id);
                     favoriteService.InsertFavorite(favorite);
                     map.put("code",200);
