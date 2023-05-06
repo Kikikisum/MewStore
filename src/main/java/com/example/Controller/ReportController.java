@@ -40,7 +40,7 @@ public class ReportController {
     @Autowired
     private OrderService orderService;
 
-    private SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0);
+    private SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0,9666666666L);
 
     //根据举报的id来查找举报具体信息
     @GetMapping("/report/{id}")
