@@ -9,8 +9,10 @@ public class SnowFlakeUtil {
     private long datacenterId;   //数据id
     //12位的***
     private long sequence;
+    //初始时间戳
+    private long twepoch;
 
-    public SnowFlakeUtil(long workerId, long datacenterId, long sequence){
+    public SnowFlakeUtil(long workerId, long datacenterId, long sequence,long twepoch){
         // sanity check for workerId
         if (workerId > maxWorkerId || workerId < 0) {
             throw new IllegalArgumentException(String.format("worker Id can't be greater than %d or less than 0",maxWorkerId));
@@ -24,10 +26,9 @@ public class SnowFlakeUtil {
         this.workerId = workerId;
         this.datacenterId = datacenterId;
         this.sequence = sequence;
+        this.twepoch = twepoch;
     }
 
-    //初始时间戳
-    private long twepoch = 1645587680;
 
     //长度为5位
     private long workerIdBits = 5L;

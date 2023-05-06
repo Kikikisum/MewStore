@@ -32,7 +32,7 @@ public class OrderController {
     @Autowired
     private DecodeJwtUtils decodeJwtUtils;
 
-    private SnowFlakeUtil snowFlakeUtil =new SnowFlakeUtil(1, 3,0);
+    private SnowFlakeUtil snowFlakeUtil =new SnowFlakeUtil(1, 3,0,466666666666L);
     @Autowired
     private GoodService goodService;
     @Autowired
