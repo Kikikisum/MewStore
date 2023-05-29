@@ -156,11 +156,10 @@ public class ReportController {
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0);
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
-                        Map<String,Object> messageMap1=reportService.ReportMap(report);
-                        messageMap1.put("msg","您被举报了!");
+                        messageMap.put("msg","您被举报了");
                         Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0);
                         messageService.InsertMessage(message1);
-                        webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap1));
+                        webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
                     }
                     else if(status==-1)
                     {
