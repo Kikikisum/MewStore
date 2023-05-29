@@ -5,10 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.Entity.Message;
 import com.example.Entity.Order;
 import com.example.Entity.Report;
 import com.example.Entity.User;
 import com.example.Mapper.ReportMapper;
+import com.example.Service.Impl.WebSocketServer;
+import com.example.Service.MessageService;
 import com.example.Service.OrderService;
 import com.example.Service.ReportService;
 import com.example.Service.UserService;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +43,15 @@ public class ReportController {
     private ReportService reportService;
     @Autowired
     private OrderService orderService;
-
+    @Autowired
+    private SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
+    @Autowired
+    private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+    @Autowired
+    private MessageService messageService;
+    @Autowired
+    private WebSocketServer webSocketServer;
     private SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0,9666666666L);
-
     //根据举报的id来查找举报具体信息
     @GetMapping("/report/{id}")
     public String get_Report(HttpServletRequest request, @PathVariable("id") Long id)
@@ -141,11 +151,26 @@ public class ReportController {
                     {
                         map.put("code",200);
                         map.put("msg","通过举报成功");
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","您的举报被通过!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
+                        Map<String,Object> messageMap1=reportService.ReportMap(report);
+                        messageMap1.put("msg","您被举报了!");
+                        Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageService.InsertMessage(message1);
+                        webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap1));
                     }
                     else if(status==-1)
                     {
                         map.put("code",200);
                         map.put("msg","拒绝举报成功");
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","您的举报被拒绝!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                     }
                 }
                 else

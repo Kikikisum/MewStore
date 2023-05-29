@@ -8,7 +8,9 @@ import com.example.Service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> implements ReportService {
@@ -58,5 +60,17 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
         return reportMapper.selectList(lqw1);
     }
 
+    @Override
+    public Map<String,Object> ReportMap(Report report)
+    {
+        Map<String,Object> map=new HashMap<>();
+        map.put("id",report.getId());
+        map.put("reported_id",report.getReported_id());
+        map.put("report_order",report.getReport_order());
+        map.put("reporter_id",report.getReported_id());
+        map.put("status",report.getStatus());
+        map.put("content",report.getContent());
+        return map;
+    }
 
 }

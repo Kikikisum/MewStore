@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.Entity.Report;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ReportService extends IService<Report> {
     //返回所有举报
@@ -16,5 +17,7 @@ public interface ReportService extends IService<Report> {
     public List<Report> findPageByStatus(Integer pageNo,Integer pageSize,int status);
 
     public List<Report> findPageByUserId(Integer pageNo,Integer pageSize,Long user_id);
+
+    public Map<String,Object> ReportMap(Report report);
 
 }
