@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.Entity.Order;
 
 import java.util.List;
+import java.util.Map;
 
 public interface OrderService extends IService<Order> {
     //返回所有订单
@@ -18,4 +19,7 @@ public interface OrderService extends IService<Order> {
     public List<Order> getOrderBySellId(Long seller_id);
     //通过卖家id查找订单
     public List<Order> getOrderByBuyerId(Long buyer_id);
+
+    //通过订单生成系统消息的字符串
+    public Map<String,Object> getMap(Order order);
 }

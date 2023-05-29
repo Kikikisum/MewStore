@@ -1,9 +1,7 @@
 package com.example.Util;
 
-import cn.hutool.json.JSONObject;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

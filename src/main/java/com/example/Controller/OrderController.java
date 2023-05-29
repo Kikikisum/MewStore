@@ -4,12 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.Entity.Good;
+import com.example.Entity.Message;
 import com.example.Entity.Order;
 import com.example.Entity.User;
 import com.example.Mapper.GoodMapper;
+import com.example.Mapper.MessageMapper;
 import com.example.Mapper.OrderMapper;
 import com.example.Mapper.UserMapper;
 import com.example.Service.GoodService;
+import com.example.Service.Impl.WebSocketServer;
+import com.example.Service.MessageService;
 import com.example.Service.OrderService;
 import com.alibaba.fastjson.JSON;
 import com.example.Service.UserService;
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +38,7 @@ public class OrderController {
     private DecodeJwtUtils decodeJwtUtils;
 
     private SnowFlakeUtil snowFlakeUtil =new SnowFlakeUtil(1, 3,0,466666666666L);
+    private SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
     @Autowired
     private GoodService goodService;
     @Autowired
@@ -43,6 +49,12 @@ public class OrderController {
     private OrderMapper orderMapper;
     @Autowired
     private GoodMapper goodMapper;
+    @Autowired
+    private WebSocketServer webSocketServer;
+    @Autowired
+    private MessageService messageService;
+    @Autowired
+    private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
     @ResponseBody
     @PostMapping("/bid")
@@ -70,7 +82,7 @@ public class OrderController {
            else
             {
                 Long rid = snowFlakeUtil.nextId();
-                 Good good=goodService.queryById(good_id);
+                Good good=goodService.queryById(good_id);
                 Order order=new Order();
                 order.setId(rid);
                 order.setGood_id(good_id);
@@ -82,6 +94,11 @@ public class OrderController {
                 order.setSeller_status(0);
                 System.out.println(money.getClass().toString());
                 orderService.InsertOrder(order);
+                Map<String,Object> messageMap=orderService.getMap(order);
+                messageMap.put("msg","商品有新的出价!");
+                Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0);
+                messageService.InsertMessage(message);
+                webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
                 map.put("code",200);
                 map.put("msg","出价成功");
             }
@@ -124,16 +141,26 @@ public class OrderController {
                     map.put("msg","订单已支付");
                 }
                 else {
+                    User seller=userService.getUserById(order.getSeller_id());
                     BigDecimal price = order.getPrice();
                     BigDecimal money = user.getMoney();
+                    BigDecimal seller_money = seller.getMoney();
                     int flag=money.compareTo(price);
                     if(flag>=0)
                     {
                         money=money.subtract(price);
+                        seller_money=seller_money.add(price);
                         user.setMoney(money);
+                        seller.setMoney(seller_money);
                         userMapper.updateById(user);
+                        userMapper.updateById(seller);
                         order.setBuyer_status(1);
                         orderMapper.updateById(order);
+                        Map<String,Object> messageMap=orderService.getMap(order);
+                        messageMap.put("msg","订单已支付!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
                         map.put("code",200);
                         map.put("msg","支付成功");
                     }
@@ -193,6 +220,30 @@ public class OrderController {
                     {
                         map.put("code",200);
                         map.put("msg","拒绝订单成功");
+                        Map<String,Object> messageMap=orderService.getMap(order);
+                        messageMap.put("msg","您的订单被卖家拒绝!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(order.getBuyer_id(),JSON.toJSONString(messageMap));
+                        //检查如果订单已被支付进行退款
+                        if(order.getBuyer_status()==1)
+                        {
+                            User seller=userService.getUserById(order.getSeller_id());
+                            BigDecimal price=order.getPrice();
+                            BigDecimal seller_money=seller.getMoney();
+                            User buyer=userService.getUserById(order.getBuyer_id());
+                            BigDecimal money=buyer.getMoney();
+                            money=money.add(price);
+                            seller_money=seller_money.subtract(price);//为负的处理？
+                            buyer.setMoney(money);
+                            seller.setMoney(seller_money);
+                            userService.updateById(buyer);
+                            userService.updateById(seller);
+                            // 向买家发送退款的websocket消息
+                            Map<String,Object> moneyMap=orderService.getMap(order);
+                            moneyMap.put("msg","将订单进行退款!");
+                            webSocketServer.sendMessage(order.getBuyer_id(),JSON.toJSONString(moneyMap));
+                        }
                     }
                     else
                     {
@@ -201,6 +252,11 @@ public class OrderController {
                         Good good=goodService.queryById(good_id);
                         good.setStatus(3);
                         goodMapper.updateById(good);
+                        Map<String,Object> messageMap=orderService.getMap(order);
+                        messageMap.put("msg","您的订单被买家同意!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(order.getBuyer_id(),JSON.toJSONString(messageMap));
                         map.put("code",200);
                         map.put("msg","确认订单成功");
                     }
