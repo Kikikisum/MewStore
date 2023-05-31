@@ -53,7 +53,6 @@ public class OrderController {
     private WebSocketServer webSocketServer;
     @Autowired
     private MessageService messageService;
-    @Autowired
     private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
     @ResponseBody
@@ -96,7 +95,7 @@ public class OrderController {
                 orderService.InsertOrder(order);
                 Map<String,Object> messageMap=orderService.getMap(order);
                 messageMap.put("msg","商品有新的出价!");
-                Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0);
+                Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                 messageService.InsertMessage(message);
                 webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
                 map.put("code",200);
@@ -158,7 +157,7 @@ public class OrderController {
                         orderMapper.updateById(order);
                         Map<String,Object> messageMap=orderService.getMap(order);
                         messageMap.put("msg","订单已支付!");
-                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
                         map.put("code",200);
@@ -222,7 +221,8 @@ public class OrderController {
                         map.put("msg","拒绝订单成功");
                         Map<String,Object> messageMap=orderService.getMap(order);
                         messageMap.put("msg","您的订单被卖家拒绝!");
-                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(order.getBuyer_id(),JSON.toJSONString(messageMap));
                         //检查如果订单已被支付进行退款
@@ -240,8 +240,11 @@ public class OrderController {
                             userService.updateById(buyer);
                             userService.updateById(seller);
                             // 向买家发送退款的websocket消息
+                            Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                             Map<String,Object> moneyMap=orderService.getMap(order);
                             moneyMap.put("msg","将订单进行退款!");
+                            messageMap.put("message_id",message1.getId());
+                            messageService.InsertMessage(message1);
                             webSocketServer.sendMessage(order.getBuyer_id(),JSON.toJSONString(moneyMap));
                         }
                     }
@@ -254,8 +257,9 @@ public class OrderController {
                         goodMapper.updateById(good);
                         Map<String,Object> messageMap=orderService.getMap(order);
                         messageMap.put("msg","您的订单被买家同意!");
-                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                         messageService.InsertMessage(message);
+                        messageMap.put("message_id",message.getId());
                         webSocketServer.sendMessage(order.getBuyer_id(),JSON.toJSONString(messageMap));
                         map.put("code",200);
                         map.put("msg","确认订单成功");

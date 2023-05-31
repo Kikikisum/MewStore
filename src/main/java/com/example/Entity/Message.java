@@ -21,7 +21,9 @@ public class Message {
     private String message;  //聊天的内容
     private Timestamp send_time; //发送的时间
     private int type;  //0为文本，1为图片
-    public void Message(Long id,boolean isSystem,Long send_id,Long receive_id,String message,Timestamp send_time,int type)
+    private boolean is_read; //是否已读，默认未读
+
+    public void Message(Long id,boolean isSystem,Long send_id,Long receive_id,String message,Timestamp send_time,int type,boolean is_read)
     {
         this.id=id;
         this.isSystem=isSystem;
@@ -30,6 +32,7 @@ public class Message {
         this.message=message;
         this.send_time=send_time;
         this.type=type;
+        this.is_read=is_read;
     }
 
 }

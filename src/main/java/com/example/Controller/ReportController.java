@@ -17,7 +17,6 @@ import com.example.Service.ReportService;
 import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
 import com.example.Util.SnowFlakeUtil;
-//import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -43,9 +42,7 @@ public class ReportController {
     private ReportService reportService;
     @Autowired
     private OrderService orderService;
-    @Autowired
     private SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
-    @Autowired
     private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
     @Autowired
     private MessageService messageService;
@@ -153,11 +150,13 @@ public class ReportController {
                         map.put("msg","通过举报成功");
                         Map<String,Object> messageMap=reportService.ReportMap(report);
                         messageMap.put("msg","您的举报被通过!");
-                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
-                        messageMap.put("msg","您被举报了");
-                        Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        messageMap.put("msg","您被举报了！");
+                        Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message1.getId());
                         messageService.InsertMessage(message1);
                         webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
                     }
@@ -167,7 +166,8 @@ public class ReportController {
                         map.put("msg","拒绝举报成功");
                         Map<String,Object> messageMap=reportService.ReportMap(report);
                         messageMap.put("msg","您的举报被拒绝!");
-                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0);
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                     }
