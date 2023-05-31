@@ -1,5 +1,6 @@
 package com.example.Service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.Entity.Message;
 import com.example.Mapper.MessageMapper;
@@ -17,6 +18,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     public int InsertMessage(Message message)
     {
         return messageMapper.insert(message);
+    }
+
+    @Override
+    public Message getMessage(Long id)
+    {
+        LambdaQueryWrapper<Message> lqw1=new LambdaQueryWrapper<Message>();
+        lqw1.eq(Message::getId,id);
+        Message message=messageMapper.selectOne(lqw1);
+        return message;
     }
 
 }

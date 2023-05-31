@@ -42,13 +42,13 @@ public class ReportController {
     private ReportService reportService;
     @Autowired
     private OrderService orderService;
-    private SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
-    private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+    private final SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
+    private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
     @Autowired
     private MessageService messageService;
     @Autowired
     private WebSocketServer webSocketServer;
-    private SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0,9666666666L);
+    private final SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0,9666666666L);
     //根据举报的id来查找举报具体信息
     @GetMapping("/report/{id}")
     public String get_Report(HttpServletRequest request, @PathVariable("id") Long id)
@@ -62,7 +62,7 @@ public class ReportController {
         {
             if (status==3)
             {
-                LambdaQueryWrapper<Report> lqw1=new LambdaQueryWrapper<Report>();
+                LambdaQueryWrapper<Report> lqw1=new LambdaQueryWrapper<>();
                 lqw1.eq(Report::getId,id);
                 List<Report> reports=reportMapper.selectList(lqw1);
                 if (reports.isEmpty())
