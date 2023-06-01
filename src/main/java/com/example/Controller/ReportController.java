@@ -222,6 +222,15 @@ public class ReportController {
                 reportService.InsertReport(report);
                 map.put("code",201);
                 map.put("msg","举报成功");
+                if(type==2)
+                {
+                    Map<String,Object> messageMap=reportService.ReportMap(report);
+                    messageMap.put("msg","您的订单被申请取消!");
+                    Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                    messageMap.put("message_id",message.getId());
+                    messageService.InsertMessage(message);
+                    webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
+                }
             }
         }
         else

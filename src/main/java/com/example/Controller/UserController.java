@@ -35,9 +35,6 @@ public class UserController {
     GoodService goodService;
 
     @Resource
-    FreezeService freezeService;
-
-    @Resource
     OrderService orderService;
 
     @Resource
@@ -259,4 +256,123 @@ public class UserController {
         }
         return JSON.toJSONString(map);
     }
+
+    //卖家对取消交易的回应，管理员进行处理,damage为-1时拒绝取消交易，damage为0时账户无受损，1为轻微受损，2为严重受损
+    //id为举报的id
+    @PostMapping("/cancel/{id}")
+    public String cancelOrder(HttpServletRequest request,@PathVariable Long id,int damage)
+    {
+        Map<String, Object> map=new HashMap<>();
+        String token = request.getHeader("token");
+        Long uid = Long.valueOf(decodeJwtUtils.getId(token));
+        User user=userService.getUserById(uid);
+        int userStatus=user.getStatus();
+        if(decodeJwtUtils.validity(token))
+        {
+            if(userStatus==3)
+            {
+                Report report=reportService.getReportById(id);
+                if(damage==-1)
+                {
+                    report.setStatus(-1);
+                    reportService.updateById(report);
+                    Map<String,Object> messageMap=reportService.ReportMap(report);
+                    messageMap.put("msg","您的取消交易的申请被卖家拒绝!");
+                    Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                    messageMap.put("message_id",message.getId());
+                    messageService.InsertMessage(message);
+                    webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
+                }
+                else
+                {
+                    report.setStatus(1);
+                    reportService.updateById(report);
+                    User buyer=userService.getUserById(report.getReporter_id());
+                    User seller=userService.getUserById(report.getReported_id());
+                    Order order=orderService.getOrderById(report.getReport_order());
+                    BigDecimal price=order.getPrice();
+                    BigDecimal buyer_money=buyer.getMoney();
+                    BigDecimal seller_money=seller.getMoney();
+                    if(damage==0)
+                    {
+                        //先退还买家资金
+                        buyer.setMoney(buyer_money.add(price));
+                        userService.updateById(buyer);
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","您的交易金已全部退回您的钱包!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
+                        if(seller_money.compareTo(price)!=-1)
+                        {
+                            seller.setMoney(seller_money.subtract(price));
+                            userService.updateById(seller);
+                        }
+                        else
+                        {
+                            seller.setMoney(BigDecimal.valueOf(0)); //账号金额不足时，扣光账户所有资金
+                            seller.setStatus(2);  //设置为黑户状态
+                            userService.updateById(seller);
+                            messageMap.put("msg","您的账户余额不足，您被设置为黑户");
+                            Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                            messageMap.put("message_id",message1.getId());
+                            messageService.InsertMessage(message1);
+                            webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
+                        }
+                    }
+                    if(damage==1) //稍微受损以3:7的比例返回
+                    {
+                        buyer.setMoney(buyer_money.add(price.multiply(BigDecimal.valueOf(0.7))));
+                        userService.updateById(buyer);
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","您的交易金70%已退回你的钱包!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
+                        if(seller_money.compareTo(price.multiply(BigDecimal.valueOf(0.3)))!=-1)
+                        {
+                            seller.setMoney(seller_money.add(price.multiply(BigDecimal.valueOf(0.3))));
+                            userService.updateById(seller);
+                        }
+                        else
+                        {
+                            seller.setMoney(BigDecimal.valueOf(0)); //账号金额不足时，扣光账户所有资金
+                            seller.setStatus(2);  //设置为黑户状态
+                            userService.updateById(seller);
+                            messageMap.put("msg","您的账户余额不足，您被设置为黑户");
+                            Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                            messageMap.put("message_id",message1.getId());
+                            messageService.InsertMessage(message1);
+                            webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
+                        }
+                    }
+                    if(damage==2) //严重受损则不退还交易金
+                    {
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","由于账户严重受损，将不进行返回交易金!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
+                    }
+                }
+                map.put("code",201);
+                map.put("msg","处理取消交易成功!");
+            }
+            else
+            {
+                map.put("code",401);
+                map.put("msg","没有权限处理取消交易");
+            }
+        }
+        else
+        {
+            map.put("code",401);
+            map.put("msg","登录超时");
+        }
+        return JSON.toJSONString(map);
+    }
+
 }
