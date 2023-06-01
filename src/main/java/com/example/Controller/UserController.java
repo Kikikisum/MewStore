@@ -37,6 +37,7 @@ public class UserController {
     @Autowired
     OrderService orderService;
 
+    //管理员审核商品
     @PutMapping("/good/verify/{id}")
     public String dealGood(HttpServletRequest request, @PathVariable("id")Long id,int status)
     {
@@ -85,6 +86,7 @@ public class UserController {
         return JSON.toJSONString(map);
     }
 
+    //
     @PostMapping ("/freeze")
     public String freeze(HttpServletRequest request,Long order_id,String reason)
     {

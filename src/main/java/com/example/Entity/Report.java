@@ -18,4 +18,5 @@ public class Report {
     private Long reporter_id;
     private int status;
     private String content;
+    private int type; //1.试图找回账户 2.取消交易 3.拉入黑名单
 }
