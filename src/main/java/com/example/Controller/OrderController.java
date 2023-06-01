@@ -91,6 +91,7 @@ public class OrderController {
                 order.setStatus(0);
                 order.setBuyer_status(0);
                 order.setSeller_status(0);
+                order.setGenerate_time(timestamp);
                 System.out.println(money.getClass().toString());
                 orderService.InsertOrder(order);
                 Map<String,Object> messageMap=orderService.getMap(order);
@@ -156,7 +157,7 @@ public class OrderController {
                         order.setBuyer_status(1);
                         orderMapper.updateById(order);
                         Map<String,Object> messageMap=orderService.getMap(order);
-                        messageMap.put("msg","订单已支付!");
+                        messageMap.put("msg","您的订单被买家支付!");
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
