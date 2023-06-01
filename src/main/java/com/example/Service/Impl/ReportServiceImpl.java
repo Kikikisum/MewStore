@@ -73,4 +73,12 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
         return map;
     }
 
+    @Override
+    public List<Report> getByType(int type)
+    {
+        LambdaQueryWrapper<Report> lqw1=new LambdaQueryWrapper<Report>();
+        lqw1.eq(Report::getType,type);
+        return reportMapper.selectList(lqw1);
+    }
+
 }

@@ -126,7 +126,7 @@ public class ReportController {
         return JSON.toJSONString(map);
     }
 
-    //处理举报
+    //处理类型3的举报
     @PutMapping("/report/deal/{id}")
     public String deal_report(HttpServletRequest request,@PathVariable("id")Long id,int status)
     {
@@ -194,7 +194,7 @@ public class ReportController {
 
     //用户对举报的生成
     @PostMapping("/report/ini")
-    public String iniReport(HttpServletRequest request,Long order_id,String content)
+    public String iniReport(HttpServletRequest request,Long order_id,String content,int type)
     {
         Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("token");
@@ -218,7 +218,7 @@ public class ReportController {
                 Long rid=snowFlakeUtil.nextId();
                 Order order=orderService.getOrderById(order_id);
                 Long reported_id=order.getSeller_id();
-                Report report=new Report(rid,reported_id,order_id,uid,0,content);
+                Report report=new Report(rid,reported_id,order_id,uid,0,content,type);
                 reportService.InsertReport(report);
                 map.put("code",201);
                 map.put("msg","举报成功");
@@ -234,7 +234,7 @@ public class ReportController {
 
     //用户查询自身发出的举报
     @GetMapping("/myReport/{curPage}/{size}")
-    private String myReport(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
+    public String myReport(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
     {
         Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("token");
@@ -257,5 +257,37 @@ public class ReportController {
         }
         return JSON.toJSONString(map);
     }
+
+    //管理员查询不同类型的举报
+    @GetMapping("/report/{type}")
+    public String get_Type(HttpServletRequest request,@PathVariable("type") int type)
+    {
+        Map<String,Object> map=new HashMap<>();
+        String token=request.getHeader("token");
+        Long uid=Long.valueOf(decodeJwtUtils.getId(token));
+        User user=userService.getUserById(uid);
+        if(decodeJwtUtils.validity(token))
+        {
+            if(user.getStatus()==3)
+            {
+                List<Report> reports=reportService.getByType(type);
+                map.put("code",201);
+                map.put("msg","查询举报成功!");
+                map.put("data",reports);
+            }
+            else
+            {
+                map.put("code",401);
+                map.put("msg","没有权限查询举报");
+            }
+        }
+        else
+        {
+            map.put("code",401);
+            map.put("msg","登录超时");
+        }
+        return JSON.toJSONString(map);
+    }
+
 
 }

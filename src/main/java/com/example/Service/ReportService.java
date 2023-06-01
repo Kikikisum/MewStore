@@ -20,4 +20,6 @@ public interface ReportService extends IService<Report> {
 
     public Map<String,Object> ReportMap(Report report);
 
+    public List<Report> getByType(int type);
+
 }

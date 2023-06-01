@@ -1,23 +1,22 @@
 package com.example.Controller;
 
 import com.alibaba.fastjson.JSON;
-import com.example.Entity.Freeze;
-import com.example.Entity.Good;
-import com.example.Entity.Order;
-import com.example.Entity.User;
+import com.example.Entity.*;
 import com.example.Mapper.FavoriteMapper;
-import com.example.Service.FreezeService;
-import com.example.Service.GoodService;
-import com.example.Service.OrderService;
-import com.example.Service.UserService;
+import com.example.Service.*;
+import com.example.Service.Impl.WebSocketServer;
 import com.example.Util.DecodeJwtUtils;
+import com.example.Util.SnowFlakeUtil;
+import org.apache.xmlbeans.impl.xb.xsdschema.Attribute;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,17 +25,35 @@ import java.util.Map;
 @RestController
 public class UserController {
 
-    @Autowired
+    @Resource
     DecodeJwtUtils decodeJwtUtils;
-    @Autowired
+
+    @Resource
     UserService userService;
-    @Autowired
+
+    @Resource
     GoodService goodService;
-    @Autowired
+
+    @Resource
     FreezeService freezeService;
-    @Autowired
+
+    @Resource
     OrderService orderService;
 
+    @Resource
+    ReportService reportService;
+
+    @Resource
+    WebSocketServer webSocketServer;
+
+    @Resource
+    MessageService messageService;
+
+    private final SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0,9666666666L);
+
+    private final SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
+
+    private final Timestamp timestamp=new Timestamp(System.currentTimeMillis());
     //管理员审核商品
     @PutMapping("/good/verify/{id}")
     public String dealGood(HttpServletRequest request, @PathVariable("id")Long id,int status)
@@ -86,7 +103,7 @@ public class UserController {
         return JSON.toJSONString(map);
     }
 
-    //
+    //买家举报买家的类型1，卖家试图找回账户
     @PostMapping ("/freeze")
     public String freeze(HttpServletRequest request,Long order_id,String reason)
     {
@@ -100,7 +117,7 @@ public class UserController {
             if(userStatus==1)
             {
                 map.put("code",401);
-                map.put("msg","黑户不能申请找回账号");
+                map.put("msg","黑户不能举报");
             }
             else if (userStatus==2)
             {
@@ -117,10 +134,17 @@ public class UserController {
                     goodService.updateById(good);
                     user.setStatus(2);
                     userService.updateById(user);
-                    Freeze freeze=new Freeze(uid,order_id,reason,0);
-                    freezeService.InsertFreeze(freeze);
+                    Report report=new Report();
+                    report.setId(snowFlakeUtil.nextId());
+                    report.setStatus(0);
+                    report.setReported_id(order.getSeller_id());
+                    report.setReport_order(order_id);
+                    report.setContent(reason);
+                    report.setReporter_id(user.getId());
+                    report.setType(1);
+                    reportService.InsertReport(report);
                     map.put("code",201);
-                    map.put("msg","申请找回账号成功");
+                    map.put("msg","举报卖家找回账号成功");
                 }
                 else
                 {
@@ -137,7 +161,7 @@ public class UserController {
         return JSON.toJSONString(map);
     }
 
-    //id为被冻结账户的用户id
+    //处理类型1的举报,id为举报id
     @PutMapping("/freeze/deal")
     public String dealFreeze(HttpServletRequest request,int status,Long id)
     {
@@ -150,45 +174,69 @@ public class UserController {
         {
             if(userStatus==3)
             {
-                Freeze freeze=freezeService.queryById(id);
-                if(freeze!=null)
+                Report report=reportService.getReportById(id);
+                if(report!=null)
                 {
-                    freeze.setStatus(status);
-                    User user1=userService.getUserById(id);
+                    report.setStatus(status);
+                    reportService.updateById(report);
+                    User buyer=userService.getUserById(report.getReporter_id());
+                    User seller=userService.getUserById(report.getReported_id());
+                    Order order=orderService.getOrderById(report.getReport_order());
                     if(status==1)
                     {
                         map.put("code",200);
-                        map.put("msg","同意申请成功");
-                        Order order=orderService.getOrderById(freeze.getOrder_id());
+                        map.put("msg","同意找回账户成功");
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","您的举报通过!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                         BigDecimal price=order.getPrice();
-                        BigDecimal money=user1.getMoney();
+                        BigDecimal money=seller.getMoney();
                         int flag=money.compareTo(price);
                         if(flag>=0)
                         {
-                            user1.setStatus(0);
-                            user1.setMoney(money.subtract(price));
-                            User user2=userService.getUserById(order.getBuyer_id());
-                            BigDecimal money2=user2.getMoney();
-                            user2.setMoney(money2.add(price));
-                            userService.updateById(user1);
-                            userService.updateById(user2);
+                            seller.setStatus(0);
+                            seller.setMoney(money.subtract(price));
+                            BigDecimal money2=buyer.getMoney();
+                            buyer.setMoney(money2.add(price));
+                            userService.updateById(seller);
+                            userService.updateById(buyer);
+                            messageMap.put("msg","您被举报了，已成功为买家退款,同时给你扣款!");
+                            Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                            messageMap.put("message_id",message1.getId());
+                            messageService.InsertMessage(message1);
+                            webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
                         }
                         else
                         {
-                            User user2=userService.getUserById(order.getBuyer_id());
-                            BigDecimal money2=user2.getMoney();
-                            user2.setMoney(money2.add(price));
-                            userService.updateById(user2);
-                            user1.setStatus(2);
-                            userService.updateById(user1);
+                            seller.setStatus(1);
+                            seller.setMoney(BigDecimal.valueOf(0));
+                            userService.updateById(seller);
+                            BigDecimal money2=buyer.getMoney();
+                            buyer.setMoney(money2.add(price));
+                            userService.updateById(seller);
+                            userService.updateById(buyer);
+                            messageMap.put("msg","您被举报了，账户余额不足，您被拉入黑名单");
+                            Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                            messageMap.put("message_id",message1.getId());
+                            messageService.InsertMessage(message1);
+                            webSocketServer.sendMessage(report.getReported_id(),JSON.toJSONString(messageMap));
                         }
                     }
                     else if(status==-1)
                     {
-                        user1.setStatus(0);
-                        userService.updateById(user1);
+                        seller.setStatus(0);
+                        userService.updateById(seller);
                         map.put("code",200);
                         map.put("msg","拒绝申请成功");
+                        Map<String,Object> messageMap=reportService.ReportMap(report);
+                        messageMap.put("msg","您的举报被拒绝!");
+                        Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
+                        messageService.InsertMessage(message);
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                     }
                 }
                 else
@@ -211,6 +259,4 @@ public class UserController {
         }
         return JSON.toJSONString(map);
     }
-
-
 }
