@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -32,23 +33,30 @@ import java.util.Map;
 @RestController
 public class ReportController {
 
-    @Autowired
+    @Resource
     private DecodeJwtUtils decodeJwtUtils;
-    @Autowired
+
+    @Resource
     private UserService userService;
-    @Autowired
+
+    @Resource
     private ReportMapper reportMapper;
-    @Autowired
+
+    @Resource
     private ReportService reportService;
-    @Autowired
+
+    @Resource
     private OrderService orderService;
-    private final SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
-    private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-    @Autowired
+
+    @Resource
     private MessageService messageService;
-    @Autowired
+
+    @Resource
     private WebSocketServer webSocketServer;
     private final SnowFlakeUtil snowFlakeUtil=new SnowFlakeUtil(1,4,0,9666666666L);
+    private final SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
+    private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
     //根据举报的id来查找举报具体信息
     @GetMapping("/report/{id}")
     public String get_Report(HttpServletRequest request, @PathVariable("id") Long id)
@@ -268,8 +276,8 @@ public class ReportController {
     }
 
     //管理员查询不同类型的举报
-    @GetMapping("/report/{type}")
-    public String get_Type(HttpServletRequest request,@PathVariable("type") int type)
+    @GetMapping("/report/type/{type}")
+    public String getType(HttpServletRequest request,@PathVariable("type") int type)
     {
         Map<String,Object> map=new HashMap<>();
         String token=request.getHeader("token");
@@ -280,6 +288,7 @@ public class ReportController {
             if(user.getStatus()==3)
             {
                 List<Report> reports=reportService.getByType(type);
+                System.out.println(reports);
                 map.put("code",201);
                 map.put("msg","查询举报成功!");
                 map.put("data",reports);
