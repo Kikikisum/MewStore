@@ -303,7 +303,7 @@ public class UserController {
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                         messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
-                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                         if(seller_money.compareTo(price)!=-1)
                         {
                             seller.setMoney(seller_money.subtract(price));
@@ -312,7 +312,7 @@ public class UserController {
                         else
                         {
                             seller.setMoney(BigDecimal.valueOf(0)); //账号金额不足时，扣光账户所有资金
-                            seller.setStatus(2);  //设置为黑户状态
+                            seller.setStatus(1);  //设置为黑户状态
                             userService.updateById(seller);
                             messageMap.put("msg","您的账户余额不足，您被设置为黑户");
                             Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0,false);
@@ -330,7 +330,7 @@ public class UserController {
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                         messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
-                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                         if(seller_money.compareTo(price.multiply(BigDecimal.valueOf(0.7)))!=-1)
                         {
                             seller.setMoney(seller_money.add(price.multiply(BigDecimal.valueOf(0.7))));
@@ -339,7 +339,7 @@ public class UserController {
                         else
                         {
                             seller.setMoney(BigDecimal.valueOf(0)); //账号金额不足时，扣光账户所有资金
-                            seller.setStatus(2);  //设置为黑户状态
+                            seller.setStatus(1);  //设置为黑户状态
                             userService.updateById(seller);
                             messageMap.put("msg","您的账户余额不足，您被设置为黑户");
                             Message message1=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReported_id(),JSON.toJSONString(messageMap),timestamp,0,false);
@@ -355,7 +355,7 @@ public class UserController {
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,report.getReporter_id(),JSON.toJSONString(messageMap),timestamp,0,false);
                         messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
-                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
+                        webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(messageMap));
                     }
                 }
                 map.put("code",201);
