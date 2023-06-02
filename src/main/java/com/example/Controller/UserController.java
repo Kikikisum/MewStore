@@ -257,7 +257,7 @@ public class UserController {
         return JSON.toJSONString(map);
     }
 
-    //卖家对取消交易的回应，管理员进行处理,damage为-1时拒绝取消交易，damage为0时账户无受损，1为轻微受损，2为严重受损
+
     //id为举报的id
     @PostMapping("/cancel/{id}")
     public String cancelOrder(HttpServletRequest request,@PathVariable Long id,int damage)
@@ -331,9 +331,9 @@ public class UserController {
                         messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(report.getReporter_id(),JSON.toJSONString(message));
-                        if(seller_money.compareTo(price.multiply(BigDecimal.valueOf(0.3)))!=-1)
+                        if(seller_money.compareTo(price.multiply(BigDecimal.valueOf(0.7)))!=-1)
                         {
-                            seller.setMoney(seller_money.add(price.multiply(BigDecimal.valueOf(0.3))));
+                            seller.setMoney(seller_money.add(price.multiply(BigDecimal.valueOf(0.7))));
                             userService.updateById(seller);
                         }
                         else
