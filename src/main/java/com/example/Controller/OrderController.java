@@ -8,7 +8,6 @@ import com.example.Entity.Message;
 import com.example.Entity.Order;
 import com.example.Entity.User;
 import com.example.Mapper.GoodMapper;
-import com.example.Mapper.MessageMapper;
 import com.example.Mapper.OrderMapper;
 import com.example.Mapper.UserMapper;
 import com.example.Service.GoodService;
@@ -21,6 +20,8 @@ import com.example.Util.DecodeJwtUtils;
 import com.example.Util.SnowFlakeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -32,32 +33,39 @@ import java.util.Map;
 @RequestMapping("/order")
 public class OrderController {
 
-    @Autowired
+    @Resource
     private OrderService orderService;
-    @Autowired
+
+    @Resource
     private DecodeJwtUtils decodeJwtUtils;
 
     private SnowFlakeUtil snowFlakeUtil =new SnowFlakeUtil(1, 3,0,466666666666L);
     private SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
-    @Autowired
+    @Resource
     private GoodService goodService;
-    @Autowired
+
+    @Resource
     private UserService userService;
-    @Autowired
+
+    @Resource
     private UserMapper userMapper;
-    @Autowired
+
+    @Resource
     private OrderMapper orderMapper;
-    @Autowired
+
+    @Resource
     private GoodMapper goodMapper;
-    @Autowired
+
+    @Resource
     private WebSocketServer webSocketServer;
-    @Autowired
+
+    @Resource
     private MessageService messageService;
     private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
     @ResponseBody
     @PostMapping("/bid")
-    public String bid(HttpServletRequest request,Long uid,Long good_id, BigDecimal money)
+    public String bid(HttpServletRequest request,Long good_id, BigDecimal money)
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
@@ -97,6 +105,7 @@ public class OrderController {
                 Map<String,Object> messageMap=orderService.getMap(order);
                 messageMap.put("msg","商品有新的出价!");
                 Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                messageMap.put("message_id",message.getId());
                 messageService.InsertMessage(message);
                 webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
                 map.put("code",200);
@@ -112,7 +121,7 @@ public class OrderController {
     }
 
     @ResponseBody
-    @GetMapping("/pay/{id}")
+    @PutMapping("/pay/{id}")
     public String pay(HttpServletRequest request,@PathVariable("id") Long id) //id是订单id
     {
         Map<String, Object>map=new HashMap<>();
@@ -159,6 +168,7 @@ public class OrderController {
                         Map<String,Object> messageMap=orderService.getMap(order);
                         messageMap.put("msg","您的订单被买家支付!");
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
+                        messageMap.put("message_id",message.getId());
                         messageService.InsertMessage(message);
                         webSocketServer.sendMessage(order.getSeller_id(),JSON.toJSONString(messageMap));
                         map.put("code",200);
@@ -235,7 +245,7 @@ public class OrderController {
                             User buyer=userService.getUserById(order.getBuyer_id());
                             BigDecimal money=buyer.getMoney();
                             money=money.add(price);
-                            seller_money=seller_money.subtract(price);//为负的处理？
+                            seller_money=seller_money.subtract(price); //为负的处理？
                             buyer.setMoney(money);
                             seller.setMoney(seller_money);
                             userService.updateById(buyer);
