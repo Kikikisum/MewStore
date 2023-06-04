@@ -78,12 +78,12 @@ public class OrderController {
         {
             if(status==1)
             {
-                map.put("code",401);
+                map.put("code",201);
                 map.put("msg","黑户无法出价");
             }
             else if (status==2)
             {
-                map.put("code",401);
+                map.put("code",201);
                 map.put("msg","用户处于冻结状态，无法出价");
             }
            else
@@ -362,7 +362,7 @@ public class OrderController {
             }
             else {
                 map.put("code",401);
-                map.put("msg","用户没有权限访问");
+                map.put("msg","用户没有权限查询");
             }
         }
         else

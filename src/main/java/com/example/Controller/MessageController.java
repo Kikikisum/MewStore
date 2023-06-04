@@ -27,7 +27,7 @@ public class MessageController {
     @Resource
     private MessageService messageService;
 
-    //查询自身的系统消息
+    //查询自身的未读系统消息
     @GetMapping("/system/messages")
     public String get_SystemMessage(HttpServletRequest request)
     {
@@ -38,6 +38,7 @@ public class MessageController {
         {
             LambdaQueryWrapper<Message> lqw=new LambdaQueryWrapper<>();
             lqw.eq(Message::getReceive_id,uid);
+            lqw.eq(Message::is_read,false);
             List<Message> messages=messageMapper.selectList(lqw);
             if(messages.isEmpty())
             {
