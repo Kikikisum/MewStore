@@ -149,6 +149,11 @@ public class OrderController {
                     map.put("code",401);
                     map.put("msg","订单已支付");
                 }
+                else if(order.getSeller_status()==-1)
+                {
+                    map.put("code",401);
+                    map.put("msg","订单已被卖家拒绝，不可支付!");
+                }
                 else {
                     User seller=userService.getUserById(order.getSeller_id());
                     BigDecimal price = order.getPrice();
