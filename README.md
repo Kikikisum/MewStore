@@ -71,58 +71,19 @@ Java后端项目地址：https://github.com/Kikikisum/MewStore
     │  MewStoreApplication.java
     │
     ├─Config
-    │      MybatisPlusConfig.java
-    │      WebSocketConfig.java
     │
     ├─Controller
-    │      FavoriteController.java
-    │      MessageController.java
-    │      OrderController.java
-    │      ReportController.java
-    │      UserController.java
     │
     ├─Entity
-    │      Favorite.java
-    │      Freeze.java
-    │      Good.java
-    │      Message.java
-    │      Order.java
-    │      Report.java
-    │      User.java
     │
     ├─Mapper
-    │      FavoriteMapper.java
-    │      FreezeMapper.java
-    │      GoodMapper.java
-    │      MessageMapper.java
-    │      OrderMapper.java
-    │      ReportMapper.java
-    │      UserMapper.java
     │
     ├─mewstore
     ├─Service
-    │  │  FavoriteService.java
-    │  │  FreezeService.java
-    │  │  GoodService.java
-    │  │  MessageService.java
-    │  │  OrderService.java
-    │  │  ReportService.java
-    │  │  UserService.java
     │  │
     │  └─Impl
-    │          FavoriteServiceImpl.java
-    │          FreezeServiceImpl.java
-    │          GoodServiceImpl.java
-    │          MessageServiceImpl.java
-    │          OrderServiceImpl.java
-    │          ReportServiceImpl.java
-    │          UserServiceImpl.java
-    │          WebSocketServer.java
     │
     ├─Util
-    │      DecodeJwtUtils.java
-    │      SnowFlakeUtil.java
-    │      SpringUtil.java
     │
     └─WebSocket
             MyWebSocket.java
