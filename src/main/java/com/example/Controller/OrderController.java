@@ -18,7 +18,6 @@ import com.alibaba.fastjson.JSON;
 import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
 import com.example.Util.SnowFlakeUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -36,11 +35,8 @@ public class OrderController {
     @Resource
     private OrderService orderService;
 
-    @Resource
-    private DecodeJwtUtils decodeJwtUtils;
-
-    private SnowFlakeUtil snowFlakeUtil =new SnowFlakeUtil(1, 3,0,466666666666L);
-    private SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
+    private final SnowFlakeUtil snowFlakeUtil =new SnowFlakeUtil(1, 3,0,466666666666L);
+    private final SnowFlakeUtil MessageSnowFlakeUtil=new SnowFlakeUtil(4,1,0,1366666666666L);
     @Resource
     private GoodService goodService;
 
@@ -61,7 +57,7 @@ public class OrderController {
 
     @Resource
     private MessageService messageService;
-    private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+    private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
     @ResponseBody
     @PostMapping("/bid")
@@ -69,12 +65,12 @@ public class OrderController {
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
-        Long id = Long.valueOf(decodeJwtUtils.getId(token));
+        Long id = Long.valueOf(DecodeJwtUtils.getId(token));
         System.out.println(id);
         User user=userService.getUserById(id);
         System.out.println(user);
         int status = user.getStatus();
-        if(decodeJwtUtils.validity(token))
+        if(DecodeJwtUtils.validity(token))
         {
             if(status==1)
             {
@@ -126,11 +122,11 @@ public class OrderController {
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
-        Long uid = Long.valueOf(decodeJwtUtils.getId(token));
+        Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         Order order=orderService.getOrderById(id);
         User user=userService.getUserById(uid);
         int status = user.getStatus();
-        if(decodeJwtUtils.validity(token))
+        if(DecodeJwtUtils.validity(token))
         {
             if(status==1)
             {
@@ -209,11 +205,11 @@ public class OrderController {
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
-        Long uid = Long.valueOf(decodeJwtUtils.getId(token));
+        Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         Order order=orderService.getOrderById(id);
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
-        if(decodeJwtUtils.validity(token))
+        if(DecodeJwtUtils.validity(token))
         {
             if(user_status==1)
             {
@@ -310,10 +306,10 @@ public class OrderController {
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
-        Long uid = Long.valueOf(decodeJwtUtils.getId(token));
+        Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
-        if(decodeJwtUtils.validity(token))
+        if(DecodeJwtUtils.validity(token))
         {
             if(user_status==1)
             {
@@ -350,10 +346,10 @@ public class OrderController {
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
-        Long uid = Long.valueOf(decodeJwtUtils.getId(token));
+        Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
-        if(decodeJwtUtils.validity(token))
+        if(DecodeJwtUtils.validity(token))
         {
             if (user_status==3)
             {
@@ -382,10 +378,10 @@ public class OrderController {
     {
         Map<String, Object>map=new HashMap<>();
         String token = request.getHeader("token");
-        Long uid = Long.valueOf(decodeJwtUtils.getId(token));
+        Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
-        if(decodeJwtUtils.validity(token))
+        if(DecodeJwtUtils.validity(token))
         {
             if(user_status==1)
             {
