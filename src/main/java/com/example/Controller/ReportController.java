@@ -33,6 +33,9 @@ import java.util.Map;
 public class ReportController {
 
     @Resource
+    Map<String, Object> map=new HashMap<>();
+
+    @Resource
     private DecodeJwtUtils decodeJwtUtils;
 
     @Resource
@@ -57,11 +60,10 @@ public class ReportController {
     private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
     //根据举报的id来查找举报具体信息
-    @GetMapping("/report/{id}")
-    public String get_Report(HttpServletRequest request, @PathVariable("id") Long id)
+    @GetMapping("/report")
+    public String get_Report(HttpServletRequest request,Long id)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int status=user.getStatus();
@@ -102,8 +104,7 @@ public class ReportController {
     @GetMapping("/report/{curPage}/{size}")
     public String report_status(HttpServletRequest request, int status,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         Page<Report> page=new Page<>(curPage,size);
@@ -134,11 +135,10 @@ public class ReportController {
     }
 
     //处理类型3的举报
-    @PutMapping("/report/deal/{id}")
-    public String deal_report(HttpServletRequest request,@PathVariable("id")Long id,int status)
+    @PutMapping("/report/deal")
+    public String deal_report(HttpServletRequest request,Long id,int status)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int userStatus=user.getStatus();
@@ -203,8 +203,7 @@ public class ReportController {
     @PostMapping("/report/ini")
     public String iniReport(HttpServletRequest request,Long order_id,String content,int type)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int userStatus=user.getStatus();
@@ -252,8 +251,7 @@ public class ReportController {
     @GetMapping("/myReport/{curPage}/{size}")
     public String myReport(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         Page<Report> page=new Page<>(curPage,size);
@@ -275,11 +273,10 @@ public class ReportController {
     }
 
     //管理员查询不同类型的举报
-    @GetMapping("/report/type/{type}")
-    public String getType(HttpServletRequest request,@PathVariable("type") int type)
+    @GetMapping("/report/type")
+    public String getType(HttpServletRequest request,int type)
     {
-        Map<String,Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         Long uid=Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         if(decodeJwtUtils.validity(token))
@@ -305,6 +302,5 @@ public class ReportController {
         }
         return JSON.toJSONString(map);
     }
-
 
 }

@@ -22,6 +22,8 @@ import java.util.Map;
 public class UserController {
 
     @Resource
+    Map<String, Object> map=new HashMap<>();
+    @Resource
     DecodeJwtUtils decodeJwtUtils;
 
     @Resource
@@ -51,7 +53,6 @@ public class UserController {
     @PutMapping("/good/verify/{id}")
     public String dealGood(HttpServletRequest request, @PathVariable("id")Long id,int status)
     {
-        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("token");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -100,8 +101,7 @@ public class UserController {
     @PostMapping ("/freeze")
     public String freeze(HttpServletRequest request,Long order_id,String reason)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int userStatus=user.getStatus();
@@ -158,8 +158,7 @@ public class UserController {
     @PutMapping("/freeze/deal")
     public String dealFreeze(HttpServletRequest request,int status,Long id)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int userStatus=user.getStatus();
@@ -258,8 +257,7 @@ public class UserController {
     @PostMapping("/cancel/{id}")
     public String cancelOrder(HttpServletRequest request,@PathVariable Long id,int damage)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int userStatus=user.getStatus();

@@ -21,6 +21,8 @@ import java.util.Map;
 public class MessageController {
 
     @Resource
+    Map<String, Object> map=new HashMap<>();
+    @Resource
     private DecodeJwtUtils decodeJwtUtils;
     @Resource
     private MessageMapper messageMapper;
@@ -31,8 +33,7 @@ public class MessageController {
     @GetMapping("/system/messages")
     public String get_SystemMessage(HttpServletRequest request)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         if(decodeJwtUtils.validity(token))
         {
@@ -63,8 +64,7 @@ public class MessageController {
     @PostMapping("read/system/{id}")
     public String read_SystemMessage(HttpServletRequest request, @PathVariable("id") Long id)
     {
-        Map<String, Object> map=new HashMap<>();
-        String token=request.getHeader("token");
+        String token=request.getHeader("Authorization");
         if(decodeJwtUtils.validity(token))
         {
             Message message=messageService.getMessage(id);
@@ -80,6 +80,5 @@ public class MessageController {
         }
         return JSON.toJSONString(map);
     }
-
 
 }

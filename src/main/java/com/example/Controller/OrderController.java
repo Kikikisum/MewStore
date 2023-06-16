@@ -1,12 +1,10 @@
 package com.example.Controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.Entity.Good;
-import com.example.Entity.Message;
-import com.example.Entity.Order;
-import com.example.Entity.User;
+import com.example.Entity.*;
 import com.example.Mapper.GoodMapper;
 import com.example.Mapper.OrderMapper;
 import com.example.Mapper.UserMapper;
@@ -18,6 +16,7 @@ import com.alibaba.fastjson.JSON;
 import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
 import com.example.Util.SnowFlakeUtil;
+import com.sun.org.apache.xpath.internal.operations.Or;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,6 +32,8 @@ import java.util.Map;
 @RequestMapping("/order")
 public class OrderController {
 
+    @Resource
+    Map<String, Object> map=new HashMap<>();
     @Resource
     private OrderService orderService;
 
@@ -63,8 +65,7 @@ public class OrderController {
     @PostMapping("/bid")
     public String bid(HttpServletRequest request,Long good_id, BigDecimal money)
     {
-        Map<String, Object>map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long id = Long.valueOf(DecodeJwtUtils.getId(token));
         System.out.println(id);
         User user=userService.getUserById(id);
@@ -117,11 +118,10 @@ public class OrderController {
     }
 
     @ResponseBody
-    @PutMapping("/pay/{id}")
-    public String pay(HttpServletRequest request,@PathVariable("id") Long id) //id是订单id
+    @PutMapping("/pay")
+    public String pay(HttpServletRequest request,Long id) //id是订单id
     {
-        Map<String, Object>map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         Order order=orderService.getOrderById(id);
         User user=userService.getUserById(uid);
@@ -200,11 +200,10 @@ public class OrderController {
     }
 
     @ResponseBody
-    @PutMapping("/deal/{id}") //id是订单id
-    public String sell(HttpServletRequest request,@PathVariable("id") Long id,int status)
+    @PutMapping("/deal") //id是订单id
+    public String sell(HttpServletRequest request,Long id,int status)
     {
-        Map<String, Object>map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         Order order=orderService.getOrderById(id);
         User user=userService.getUserById(uid);
@@ -301,11 +300,10 @@ public class OrderController {
     }
 
     //查询自身订单
-    @GetMapping("Myorder/{curPage}/{size}")
-    public String getMyorder(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
+    @GetMapping("Myorder/buy")
+    public String getMyorder(HttpServletRequest request)
     {
-        Map<String, Object>map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
@@ -323,10 +321,9 @@ public class OrderController {
             }
             else
             {
-                Page<Order> page = new Page<>(curPage, size);
-                QueryWrapper<Order> wrapper = new QueryWrapper<>();
-                wrapper.like("buyer_id", uid);
-                IPage<Order> data = orderMapper.selectPage(page, wrapper);
+                LambdaQueryWrapper<Order> lqw1=new LambdaQueryWrapper<Order>();
+                lqw1.eq(Order::getBuyer_id,uid);
+                List<Order> data=orderMapper.selectList(lqw1);
                 map.put("code",200);
                 map.put("msg","查询成功");
                 map.put("data",data);
@@ -341,11 +338,10 @@ public class OrderController {
     }
 
     //查询不同状态的订单
-    @GetMapping("/{curPage}/{size}")
-    public String getOrder(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size,int status)
+    @GetMapping("/status")
+    public String getOrder(HttpServletRequest request,int status)
     {
-        Map<String, Object>map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
@@ -353,10 +349,9 @@ public class OrderController {
         {
             if (user_status==3)
             {
-                Page<Order> page = new Page<>(curPage, size);
-                QueryWrapper<Order> wrapper = new QueryWrapper<>();
-                wrapper.eq("status", status);
-                IPage<Order> data = orderMapper.selectPage(page, wrapper);
+                LambdaQueryWrapper<Order> lqw1=new LambdaQueryWrapper<Order>();
+                lqw1.eq(Order::getStatus,status);
+                List<Order> data=orderMapper.selectList(lqw1);
                 map.put("code",200);
                 map.put("msg","查询成功");
                 map.put("data",data);
@@ -373,11 +368,10 @@ public class OrderController {
         }
         return JSON.toJSONString(map);
     }
-    @GetMapping("Mysell/{curPage}/{size}")
-    public String getMysell(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
+    @GetMapping("/my/sell")
+    public String getMysell(HttpServletRequest request)
     {
-        Map<String, Object>map=new HashMap<>();
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
@@ -395,10 +389,9 @@ public class OrderController {
             }
             else
             {
-                Page<Order> page = new Page<>(curPage, size);
-                QueryWrapper<Order> wrapper = new QueryWrapper<>();
-                wrapper.like("seller_id", uid);
-                IPage<Order> data = orderMapper.selectPage(page, wrapper);
+                LambdaQueryWrapper<Order> lqw1=new LambdaQueryWrapper<Order>();
+                lqw1.eq(Order::getSeller_id,uid);
+                List<Order> data=orderMapper.selectList(lqw1);
                 map.put("code",200);
                 map.put("msg","查询成功");
                 map.put("data",data);

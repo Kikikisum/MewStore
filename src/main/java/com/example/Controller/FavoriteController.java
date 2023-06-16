@@ -36,7 +36,7 @@ public class FavoriteController {
     @PostMapping("fav/{id}")
     public String fav(HttpServletRequest request, @PathVariable("id") Long good_id)
     {
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
         int user_status = user.getStatus();
