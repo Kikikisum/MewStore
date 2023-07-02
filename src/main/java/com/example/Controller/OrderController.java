@@ -48,9 +48,7 @@ public class OrderController {
         Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long id = Long.valueOf(DecodeJwtUtils.getId(token));
-        System.out.println(id);
         User user=userService.getUserById(id);
-        System.out.println(user);
         int status = user.getStatus();
         if(DecodeJwtUtils.validity(token))
         {
@@ -216,6 +214,8 @@ public class OrderController {
                     if(status==-1)
                     {
                         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                        order.setStatus(-1);
+                        orderService.updateById(order);
                         map.put("code",200);
                         map.put("msg","拒绝订单成功");
                         Map<String,Object> messageMap=orderService.getMap(order);
