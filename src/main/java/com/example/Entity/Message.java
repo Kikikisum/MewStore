@@ -35,4 +35,9 @@ public class Message {
         this.is_read=is_read;
     }
 
+    public boolean isIs_read()
+    {
+        return is_read;
+    }
+
 }

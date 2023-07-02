@@ -17,7 +17,6 @@ import java.util.Map;
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
     @Autowired
     OrderMapper orderMapper;
-    private Order order;
 
     @Override
     public List<Order> getAllOrder()

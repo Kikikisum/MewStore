@@ -2,9 +2,6 @@ package com.example.Controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.Entity.Message;
 import com.example.Entity.Order;
 import com.example.Entity.Report;
@@ -31,9 +28,6 @@ import java.util.Map;
 @CrossOrigin
 @RestController
 public class ReportController {
-
-    @Resource
-    Map<String, Object> map=new HashMap<>();
 
     @Resource
     private DecodeJwtUtils decodeJwtUtils;
@@ -63,6 +57,7 @@ public class ReportController {
     @GetMapping("/report")
     public String get_Report(HttpServletRequest request,Long id)
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -101,16 +96,16 @@ public class ReportController {
     }
 
     //返回不同状态的举报
-    @GetMapping("/report/{curPage}/{size}")
-    public String report_status(HttpServletRequest request, int status,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
+    @GetMapping("/report/status")
+    public String report_status(HttpServletRequest request, int status)
     {
+        Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
-        Page<Report> page=new Page<>(curPage,size);
-        QueryWrapper<Report> wrapper=new QueryWrapper<>();
-        wrapper.eq("status",status);
-        IPage<Report> data=reportMapper.selectPage(page,wrapper);
+        LambdaQueryWrapper<Report> lqw1=new LambdaQueryWrapper<>();
+        lqw1.eq(Report::getStatus,status);
+        List<Report> reports=reportMapper.selectList(lqw1);
         int userStatus=user.getStatus();
         if(decodeJwtUtils.validity(token))
         {
@@ -118,7 +113,7 @@ public class ReportController {
             {
                 map.put("code",200);
                 map.put("msg","查询成功");
-                map.put("data",data);
+                map.put("data",reports);
             }
             else
             {
@@ -138,6 +133,7 @@ public class ReportController {
     @PutMapping("/report/deal")
     public String deal_report(HttpServletRequest request,Long id,int status)
     {
+        Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -203,6 +199,7 @@ public class ReportController {
     @PostMapping("/report/ini")
     public String iniReport(HttpServletRequest request,Long order_id,String content,int type)
     {
+        Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -248,16 +245,16 @@ public class ReportController {
     }
 
     //用户查询自身发出的举报
-    @GetMapping("/myReport/{curPage}/{size}")
-    public String myReport(HttpServletRequest request,@PathVariable("curPage")int curPage,@PathVariable("size")int size)
+    @GetMapping("/myReport")
+    public String myReport(HttpServletRequest request)
     {
+        Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
-        Page<Report> page=new Page<>(curPage,size);
-        QueryWrapper<Report> wrapper=new QueryWrapper<>();
-        wrapper.like("reporter_id",uid);
-        IPage<Report> data=reportMapper.selectPage(page,wrapper);
+        LambdaQueryWrapper<Report> lqw1=new LambdaQueryWrapper<Report>();
+        lqw1.eq(Report::getReporter_id,uid);
+        List<Report> data=reportService.list(lqw1);
         if(decodeJwtUtils.validity(token))
         {
             map.put("code",200);
@@ -276,6 +273,7 @@ public class ReportController {
     @GetMapping("/report/type")
     public String getType(HttpServletRequest request,int type)
     {
+        Map<String, Object> map=new HashMap<>();
         String token=request.getHeader("Authorization");
         Long uid=Long.valueOf(decodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);

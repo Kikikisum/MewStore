@@ -24,4 +24,5 @@ public class Order {
     private int seller_status;
     private BigDecimal price;
     private Timestamp generate_time;
+    private String good_title;
 }

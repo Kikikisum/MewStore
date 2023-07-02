@@ -1,13 +1,7 @@
 package com.example.Controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.Entity.*;
-import com.example.Mapper.GoodMapper;
-import com.example.Mapper.OrderMapper;
-import com.example.Mapper.UserMapper;
 import com.example.Service.GoodService;
 import com.example.Service.Impl.WebSocketServer;
 import com.example.Service.MessageService;
@@ -16,7 +10,6 @@ import com.alibaba.fastjson.JSON;
 import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
 import com.example.Util.SnowFlakeUtil;
-import com.sun.org.apache.xpath.internal.operations.Or;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -31,9 +24,6 @@ import java.util.Map;
 @CrossOrigin
 @RequestMapping("/order")
 public class OrderController {
-
-    @Resource
-    Map<String, Object> map=new HashMap<>();
     @Resource
     private OrderService orderService;
 
@@ -46,25 +36,16 @@ public class OrderController {
     private UserService userService;
 
     @Resource
-    private UserMapper userMapper;
-
-    @Resource
-    private OrderMapper orderMapper;
-
-    @Resource
-    private GoodMapper goodMapper;
-
-    @Resource
     private WebSocketServer webSocketServer;
 
     @Resource
     private MessageService messageService;
-    private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
     @ResponseBody
     @PostMapping("/bid")
     public String bid(HttpServletRequest request,Long good_id, BigDecimal money)
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long id = Long.valueOf(DecodeJwtUtils.getId(token));
         System.out.println(id);
@@ -85,6 +66,7 @@ public class OrderController {
             }
            else
             {
+                Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                 Long rid = snowFlakeUtil.nextId();
                 Good good=goodService.queryById(good_id);
                 Order order=new Order();
@@ -93,10 +75,11 @@ public class OrderController {
                 order.setBuyer_id(id);
                 order.setSeller_id(good.getSeller_id());
                 order.setPrice(money);
-                order.setStatus(0);
+                order.setStatus(2);
                 order.setBuyer_status(0);
                 order.setSeller_status(0);
                 order.setGenerate_time(timestamp);
+                order.setGood_title(good.getTitle());
                 System.out.println(money.getClass().toString());
                 orderService.InsertOrder(order);
                 Map<String,Object> messageMap=orderService.getMap(order);
@@ -121,6 +104,7 @@ public class OrderController {
     @PutMapping("/pay")
     public String pay(HttpServletRequest request,Long id) //id是订单id
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         Order order=orderService.getOrderById(id);
@@ -158,14 +142,16 @@ public class OrderController {
                     int flag=money.compareTo(price);
                     if(flag>=0)
                     {
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                         money=money.subtract(price);
                         seller_money=seller_money.add(price);
                         user.setMoney(money);
                         seller.setMoney(seller_money);
-                        userMapper.updateById(user);
-                        userMapper.updateById(seller);
+                        userService.updateById(user);
+                        userService.updateById(seller);
                         order.setBuyer_status(1);
-                        orderMapper.updateById(order);
+                        order.setStatus(0);
+                        orderService.updateById(order);
                         Map<String,Object> messageMap=orderService.getMap(order);
                         messageMap.put("msg","您的订单被买家支付!");
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getSeller_id(),JSON.toJSONString(messageMap),timestamp,0,false);
@@ -203,6 +189,7 @@ public class OrderController {
     @PutMapping("/deal") //id是订单id
     public String sell(HttpServletRequest request,Long id,int status)
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         Order order=orderService.getOrderById(id);
@@ -225,9 +212,10 @@ public class OrderController {
                 if (order.getSeller_status()==0)
                 {
                     order.setSeller_status(status);
-                    orderMapper.updateById(order);
+                    orderService.updateById(order);
                     if(status==-1)
                     {
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                         map.put("code",200);
                         map.put("msg","拒绝订单成功");
                         Map<String,Object> messageMap=orderService.getMap(order);
@@ -261,11 +249,12 @@ public class OrderController {
                     }
                     else
                     {
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                         //变化状态，且把其他订单拒绝
                         Long good_id=order.getGood_id();
                         Good good=goodService.queryById(good_id);
                         good.setStatus(3);
-                        goodMapper.updateById(good);
+                        goodService.updateById(good);
                         Map<String,Object> messageMap=orderService.getMap(order);
                         messageMap.put("msg","您的订单被买家同意!");
                         Message message=new Message(MessageSnowFlakeUtil.nextId(),true,6L,order.getBuyer_id(),JSON.toJSONString(messageMap),timestamp,0,false);
@@ -303,6 +292,7 @@ public class OrderController {
     @GetMapping("Myorder/buy")
     public String getMyorder(HttpServletRequest request)
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -321,9 +311,9 @@ public class OrderController {
             }
             else
             {
-                LambdaQueryWrapper<Order> lqw1=new LambdaQueryWrapper<Order>();
+                LambdaQueryWrapper<Order> lqw1= new LambdaQueryWrapper<>();
                 lqw1.eq(Order::getBuyer_id,uid);
-                List<Order> data=orderMapper.selectList(lqw1);
+                List<Order> data=orderService.list(lqw1);
                 map.put("code",200);
                 map.put("msg","查询成功");
                 map.put("data",data);
@@ -341,6 +331,7 @@ public class OrderController {
     @GetMapping("/status")
     public String getOrder(HttpServletRequest request,int status)
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -349,9 +340,9 @@ public class OrderController {
         {
             if (user_status==3)
             {
-                LambdaQueryWrapper<Order> lqw1=new LambdaQueryWrapper<Order>();
+                LambdaQueryWrapper<Order> lqw1= new LambdaQueryWrapper<>();
                 lqw1.eq(Order::getStatus,status);
-                List<Order> data=orderMapper.selectList(lqw1);
+                List<Order> data=orderService.list(lqw1);
                 map.put("code",200);
                 map.put("msg","查询成功");
                 map.put("data",data);
@@ -371,6 +362,7 @@ public class OrderController {
     @GetMapping("/my/sell")
     public String getMysell(HttpServletRequest request)
     {
+        Map<String, Object> map=new HashMap<>();
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(DecodeJwtUtils.getId(token));
         User user=userService.getUserById(uid);
@@ -389,9 +381,9 @@ public class OrderController {
             }
             else
             {
-                LambdaQueryWrapper<Order> lqw1=new LambdaQueryWrapper<Order>();
+                LambdaQueryWrapper<Order> lqw1= new LambdaQueryWrapper<>();
                 lqw1.eq(Order::getSeller_id,uid);
-                List<Order> data=orderMapper.selectList(lqw1);
+                List<Order> data=orderService.list(lqw1);
                 map.put("code",200);
                 map.put("msg","查询成功");
                 map.put("data",data);

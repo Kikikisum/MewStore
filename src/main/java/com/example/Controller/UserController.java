@@ -21,7 +21,6 @@ import java.util.Map;
 @RestController
 public class UserController {
 
-    @Resource
     Map<String, Object> map=new HashMap<>();
     @Resource
     DecodeJwtUtils decodeJwtUtils;
@@ -50,8 +49,8 @@ public class UserController {
 
     private final Timestamp timestamp=new Timestamp(System.currentTimeMillis());
     //管理员审核商品
-    @PutMapping("/good/verify/{id}")
-    public String dealGood(HttpServletRequest request, @PathVariable("id")Long id,int status)
+    @PutMapping("/good/verify")
+    public String dealGood(HttpServletRequest request,Long id,int status)
     {
         String token = request.getHeader("token");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
@@ -254,8 +253,8 @@ public class UserController {
 
 
     //id为举报的id
-    @PostMapping("/cancel/{id}")
-    public String cancelOrder(HttpServletRequest request,@PathVariable Long id,int damage)
+    @PostMapping("/cancel")
+    public String cancelOrder(HttpServletRequest request,Long id,int damage)
     {
         String token = request.getHeader("Authorization");
         Long uid = Long.valueOf(decodeJwtUtils.getId(token));
