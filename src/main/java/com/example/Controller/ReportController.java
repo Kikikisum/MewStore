@@ -2,10 +2,7 @@ package com.example.Controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.Entity.Message;
-import com.example.Entity.Order;
-import com.example.Entity.Report;
-import com.example.Entity.User;
+import com.example.Entity.*;
 import com.example.Mapper.ReportMapper;
 import com.example.Service.Impl.WebSocketServer;
 import com.example.Service.MessageService;
@@ -20,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +73,19 @@ public class ReportController {
                     map.put("msg","无该举报信息");
                 }
                 else {
+                    List<Reports> report=new ArrayList<>();
+                    for(Report report1:reports)
+                    {
+                        Reports re=new Reports();
+                        re.setReported_id(report1.getId().toString());
+                        re.setReported_id(report1.getReported_id().toString());
+                        re.setReporter_id(report1.getReporter_id().toString());
+                        re.setReport_order(report1.getReport_order().toString());
+                        re.setStatus(report1.getStatus());
+                        re.setContent(report1.getContent());
+                        re.setType(report1.getType());
+                        report.add(re);
+                    }
                     map.put("code",201);
                     map.put("msg","查询成功");
                     map.put("data",reports);
@@ -111,9 +122,22 @@ public class ReportController {
         {
             if(userStatus==3)
             {
+                List<Reports> report=new ArrayList<>();
+                for(Report report1:reports)
+                {
+                    Reports re=new Reports();
+                    re.setReported_id(report1.getId().toString());
+                    re.setReported_id(report1.getReported_id().toString());
+                    re.setReporter_id(report1.getReporter_id().toString());
+                    re.setReport_order(report1.getReport_order().toString());
+                    re.setStatus(report1.getStatus());
+                    re.setContent(report1.getContent());
+                    re.setType(report1.getType());
+                    report.add(re);
+                }
                 map.put("code",200);
                 map.put("msg","查询成功");
-                map.put("data",reports);
+                map.put("data",report);
             }
             else
             {
@@ -257,9 +281,22 @@ public class ReportController {
         List<Report> data=reportService.list(lqw1);
         if(decodeJwtUtils.validity(token))
         {
+            List<Reports> report=new ArrayList<>();
+            for(Report report1:data)
+            {
+                Reports re=new Reports();
+                re.setReported_id(report1.getId().toString());
+                re.setReported_id(report1.getReported_id().toString());
+                re.setReporter_id(report1.getReporter_id().toString());
+                re.setReport_order(report1.getReport_order().toString());
+                re.setStatus(report1.getStatus());
+                re.setContent(report1.getContent());
+                re.setType(report1.getType());
+                report.add(re);
+            }
             map.put("code",200);
             map.put("msg","查询成功");
-            map.put("data",data);
+            map.put("data",report);
         }
         else
         {
@@ -282,10 +319,22 @@ public class ReportController {
             if(user.getStatus()==3)
             {
                 List<Report> reports=reportService.getByType(type);
-                System.out.println(reports);
+                List<Reports> report=new ArrayList<>();
+                for(Report report1:reports)
+                {
+                    Reports re=new Reports();
+                    re.setReported_id(report1.getId().toString());
+                    re.setReported_id(report1.getReported_id().toString());
+                    re.setReporter_id(report1.getReporter_id().toString());
+                    re.setReport_order(report1.getReport_order().toString());
+                    re.setStatus(report1.getStatus());
+                    re.setContent(report1.getContent());
+                    re.setType(report1.getType());
+                    report.add(re);
+                }
                 map.put("code",201);
                 map.put("msg","查询举报成功!");
-                map.put("data",reports);
+                map.put("data",report);
             }
             else
             {

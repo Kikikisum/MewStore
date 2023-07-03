@@ -2,12 +2,9 @@ package com.example.Controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.Entity.*;
-import com.example.Service.GoodService;
+import com.example.Service.*;
 import com.example.Service.Impl.WebSocketServer;
-import com.example.Service.MessageService;
-import com.example.Service.OrderService;
 import com.alibaba.fastjson.JSON;
-import com.example.Service.UserService;
 import com.example.Util.DecodeJwtUtils;
 import com.example.Util.SnowFlakeUtil;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +13,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -314,9 +313,27 @@ public class OrderController {
                 LambdaQueryWrapper<Order> lqw1= new LambdaQueryWrapper<>();
                 lqw1.eq(Order::getBuyer_id,uid);
                 List<Order> data=orderService.list(lqw1);
+                List<Orders> orders = new ArrayList<Orders>();
+                for(Order order:data)
+                {
+                    SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String date=df.format(order.getGenerate_time());
+                    Orders ord =new Orders();
+                    ord.setStatus(order.getStatus());
+                    ord.setId(order.getId().toString());
+                    ord.setBuyer_id(order.getBuyer_id().toString());
+                    ord.setSeller_id(order.getSeller_id().toString());
+                    ord.setGood_id(order.getGood_id().toString());
+                    ord.setBuyer_status(order.getBuyer_status());
+                    ord.setSeller_status(order.getSeller_status());
+                    ord.setPrice(order.getPrice());
+                    ord.setGood_title(order.getGood_title());
+                    ord.setGenerate_time(date);
+                    orders.add(ord);
+                }
                 map.put("code",200);
                 map.put("msg","查询成功");
-                map.put("data",data);
+                map.put("data",orders);
             }
         }
         else
@@ -343,9 +360,27 @@ public class OrderController {
                 LambdaQueryWrapper<Order> lqw1= new LambdaQueryWrapper<>();
                 lqw1.eq(Order::getStatus,status);
                 List<Order> data=orderService.list(lqw1);
+                List<Orders> orders = new ArrayList<Orders>();
+                for(Order order:data)
+                {
+                    SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String date=df.format(order.getGenerate_time());
+                    Orders ord =new Orders();
+                    ord.setStatus(order.getStatus());
+                    ord.setId(order.getId().toString());
+                    ord.setBuyer_id(order.getBuyer_id().toString());
+                    ord.setSeller_id(order.getSeller_id().toString());
+                    ord.setGood_id(order.getGood_id().toString());
+                    ord.setBuyer_status(order.getBuyer_status());
+                    ord.setSeller_status(order.getSeller_status());
+                    ord.setPrice(order.getPrice());
+                    ord.setGood_title(order.getGood_title());
+                    ord.setGenerate_time(date);
+                    orders.add(ord);
+                }
                 map.put("code",200);
                 map.put("msg","查询成功");
-                map.put("data",data);
+                map.put("data",orders);
             }
             else {
                 map.put("code",401);
@@ -384,9 +419,27 @@ public class OrderController {
                 LambdaQueryWrapper<Order> lqw1= new LambdaQueryWrapper<>();
                 lqw1.eq(Order::getSeller_id,uid);
                 List<Order> data=orderService.list(lqw1);
+                List<Orders> orders = new ArrayList<Orders>();
+                for(Order order:data)
+                {
+                    SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String date=df.format(order.getGenerate_time());
+                    Orders ord =new Orders();
+                    ord.setStatus(order.getStatus());
+                    ord.setId(order.getId().toString());
+                    ord.setBuyer_id(order.getBuyer_id().toString());
+                    ord.setSeller_id(order.getSeller_id().toString());
+                    ord.setGood_id(order.getGood_id().toString());
+                    ord.setBuyer_status(order.getBuyer_status());
+                    ord.setSeller_status(order.getSeller_status());
+                    ord.setPrice(order.getPrice());
+                    ord.setGood_title(order.getGood_title());
+                    ord.setGenerate_time(date);
+                    orders.add(ord);
+                }
                 map.put("code",200);
                 map.put("msg","查询成功");
-                map.put("data",data);
+                map.put("data",orders);
             }
         }
         else
